@@ -1,0 +1,33 @@
+<%- include('./partials/header') %>
+<style>
+	main {
+		width: 100vw;
+		height: 100vh;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	main img {
+		max-width: 600px;
+		min-width: 300px;
+		width: 600px;
+		height: auto;
+		padding: 1rem;
+	}
+</style>
+
+<main>
+	<img src="/assets/404.png" alt="404" draggable="false">
+</main>
+
+<script src="main.js"></script>
+<script>
+	setInterval(() => {
+		window.location.href = "/";
+	}, 2000);
+</script>
+</body>
+
+</html>

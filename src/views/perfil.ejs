@@ -1,0 +1,69 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<main class="profile">
+	<section>
+		<div>
+			<img src="<%- user.avatar %>" alt="avatar" class="profile-avatar">
+			<h2 class="profile-name"><span class="emphasis"><%- user.name %></span></h2>
+			<h3 class="profile-id">Tag: <span class="emphasis"><%- user.tag %></span></h3>
+			<form class="logout-button" action="/google/logout">
+				<button type="submit">Sair / Logout</button>
+			</form>
+		</div>
+		<hr>
+		<div>
+			<h2>Seus pedidos</h2>
+			<div id="boxProfile"></div>
+		</div>
+	</section>
+</main>
+
+<footer>
+	<div></div>
+	<div>
+		<h2 class="atlas">Atlas</h2>
+		<a class="atlasmin">todos os direitos reservados &#169;</a>
+	</div>
+	<div class="plus">3º Ano "C"</div>
+</footer>
+
+<script>
+	firebase
+		.database()
+		.ref("users/<%- user.username %><%- user.discriminator %>/pedidos")
+		.once("value", function(snapshot) {
+			snapshot.forEach((child) => {
+				document.getElementById("boxProfile").innerHTML += `<div class="boxProf" id="pedido${
+                snapshot.key
+            }">
+            <h2 class="${
+                    child.child("status").val() === "Preparando"
+                        ? "details-db"
+                        : child.child("status").val() === "Entregue"
+                        ? "details-g"
+                        : "emphasis"
+                }" id="h2${child.child("id").val()}">#${child
+                    .child("id")
+                    .val()}</h2>
+                    <p><strong>Status: </strong>${child.child("status").val()}</p>
+                    <p><strong>Pagamento: </strong>${child.child("debito").val()}</p>
+                    <p><strong>Preço: </strong>${child.child("preco").val()}</p>
+                    <br>
+                    <h2 class="emphasis">Entrega</h2>
+                    <p><strong>Entregar a: </strong>${child.child("cliente").val()}</p>
+                    <p><strong>Telefone: </strong>${child.child("telefone").val()}</p>
+                    <p><strong>Turma: </strong>${child.child("turma").val()}</p>
+                    <br>
+                    <h2 class="emphasis">Itens</h2>
+                    <ul id="list-pedidos">
+                        ${child.child("lista").val()}
+                    </ul>
+                    <a class="whatsapp" href="https://api.whatsapp.com/send?phone=558196421340&text=Ol%C3%A1!%0AGostaria%20de%20falar%20sobre%20o%20pedido:%20*%23${child.child("id").val()}*.%20:D" target="_blank">Personalize no Whatsapp</a>
+            </div>`;
+			});
+		});
+</script>
+</body>
+
+</html>

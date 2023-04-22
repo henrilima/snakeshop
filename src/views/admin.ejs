@@ -1,0 +1,371 @@
+<title>Painel do Administrador</title>
+<%- include('./partials/header') %>
+
+<main class="admin">
+	<section>
+		<h1>Todos os pedidos</h1>
+		<div class="buttons-adm">
+			<button onclick="pedidosNE()">Pedidos</button>
+			<button onclick="pedidosE()">Entregues</button>
+		</div>
+
+		<div id="boxAdm"></div>
+	</section>
+</main>
+
+<script src="main.js"></script>
+<script>
+	let last = "";
+
+	function pedidosNE() {
+		last = "NE";
+		document.getElementById("boxAdm").innerHTML = "";
+
+		firebase
+			.database()
+			.ref("adm/pedidos")
+			.once("value", function(snapshot) {
+				snapshot.forEach((child) => {
+					if (
+						child.child("status").val() === "Em processo" || child.child("status").val() === "Preparando"
+					) {
+						document.getElementById(
+							"boxAdm"
+						).innerHTML += `<div class="boxAdmin" id="pedido${
+                    snapshot.key
+                }">
+            <section>
+            <div>
+                <h2 class="${
+                    child.child("status").val() === "Preparando"
+                        ? "details-db"
+                        : child.child("status").val() === "Entregue"
+                        ? "details-g"
+                        : "emphasis"
+                }" id="h2${child.child("id").val()}">#${child
+                    .child("id")
+                    .val()}</h2>
+                    <p id="status${child
+                        .child("id")
+                        .val()}"><strong>Status: </strong>${child
+                    .child("status")
+                    .val()}</p>
+                    <p id="debito${child
+                        .child("id")
+                        .val()}"><strong>Pagamento: </strong>${child
+                    .child("debito")
+                    .val()}</p>
+                    <p><strong>Preço: </strong>${child.child("preco").val()}</p>
+                    </div>
+                    <br>
+                    <div>
+                    <h2 class="emphasis">Entrega</h2>
+                    <p><strong>Entregar a: </strong>${child
+                        .child("cliente")
+                        .val()}</p>
+                    <p><strong>Telefone: </strong>${child
+                        .child("telefone")
+                        .val()}</p>
+                    <p><strong>Turma: </strong>${child.child("turma").val()}</p>
+                    </div>
+                    <br>
+                    <div>
+                    <h2 class="emphasis">Itens</h2>
+                    <ul id="list-pedidos">
+                        ${child.child("lista").val()}
+                    </ul>
+                    </div>
+                    </section>
+                    <section>
+                        <a class="whatsapp" href="https://api.whatsapp.com/send?phone=558196421340&text=Pedido:%20*%23${child
+                            .child("id")
+                            .val()}*.%0ACliente:%20*${child
+                    .child("cliente")
+                    .val()}*.%0APre%C3%A7o:%20*${child
+                    .child("preco")
+                    .val()}*.%0AContato:%20*${child
+                    .child("telefone")
+                    .val()}*.%0A%0AItens:%20*${child
+                    .child("lista")
+                    .val()
+                    .replace(new RegExp("<li>", "gi"), "")
+                    .replace(
+                        new RegExp("</li>", "gi"),
+                        ""
+                    )}*" target="_blank">Comente no Whatsapp</a>
+                    <a class="functions" onclick="ativarFuncao('preparando', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Preparando</a>
+
+                    <a class="functions" onclick="ativarFuncao('entregue', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Entregue</a>
+
+                    <a class="functions" onclick="ativarFuncao('pago', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Pago</a>
+
+                    <a class="functions" onclick="ativarFuncao('reset', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Resetar</a>
+                        </section>
+            </div>`;
+					};
+				});
+			});
+	};
+
+	function pedidosE() {
+		last = "E";
+		document.getElementById("boxAdm").innerHTML = "";
+
+		firebase
+			.database()
+			.ref("adm/pedidos")
+			.once("value", function(snapshot) {
+				snapshot.forEach((child) => {
+					if (
+						child.child("status").val() === "Entregue"
+					) {
+						document.getElementById(
+							"boxAdm"
+						).innerHTML += `<div class="boxAdmin" id="pedido${
+                    snapshot.key
+                }">
+            <section>
+            <div>
+                <h2 class="${
+                    child.child("status").val() === "Preparando"
+                        ? "details-db"
+                        : child.child("status").val() === "Entregue"
+                        ? "details-g"
+                        : "emphasis"
+                }" id="h2${child.child("id").val()}">#${child
+                    .child("id")
+                    .val()}</h2>
+                    <p id="status${child
+                        .child("id")
+                        .val()}"><strong>Status: </strong>${child
+                    .child("status")
+                    .val()}</p>
+                    <p id="debito${child
+                        .child("id")
+                        .val()}"><strong>Pagamento: </strong>${child
+                    .child("debito")
+                    .val()}</p>
+                    <p><strong>Preço: </strong>${child.child("preco").val()}</p>
+                    </div>
+                    <br>
+                    <div>
+                    <h2 class="emphasis">Entrega</h2>
+                    <p><strong>Entregue a: </strong>${child
+                        .child("cliente")
+                        .val()}</p>
+                    <p><strong>Telefone: </strong>${child
+                        .child("telefone")
+                        .val()}</p>
+                    <p><strong>Turma: </strong>${child.child("turma").val()}</p>
+                    </div>
+                    <br>
+                    <div>
+                    <h2 class="emphasis">Itens</h2>
+                    <ul id="list-pedidos">
+                        ${child.child("lista").val()}
+                    </ul>
+                    </div>
+                    </section>
+                    <section>
+                        <a class="whatsapp" href="https://api.whatsapp.com/send?phone=558196421340&text=Pedido:%20*%23${child
+                            .child("id")
+                            .val()}*.%0ACliente:%20*${child
+                    .child("cliente")
+                    .val()}*.%0APre%C3%A7o:%20*${child
+                    .child("preco")
+                    .val()}*.%0AContato:%20*${child
+                    .child("telefone")
+                    .val()}*.%0A%0AItens:%20*${child
+                    .child("lista")
+                    .val()
+                    .replace(new RegExp("<li>", "gi"), "")
+                    .replace(
+                        new RegExp("</li>", "gi"),
+                        ""
+                    )}*" target="_blank">Problemas? Whatsapp</a>
+
+                    <a class="functions" onclick="ativarFuncao('pago', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Pago</a>
+
+                    <a class="functions" onclick="ativarFuncao('reset', '${child
+                        .child("id")
+                        .val()}', '${child.key}', '${child
+                    .child("usuario")
+                    .val()}')">Resetar</a>
+                        </section>
+            </div>`;
+					};
+				});
+			});
+	};
+
+	function ativarFuncao(nome, id, key, userid) {
+		const databaseRef = firebase.database().ref("users");
+
+		switch (nome) {
+			case "preparando":
+				let a = document.getElementById(`h2${id}`);
+				a.classList.remove("emphasis");
+				a.classList.remove("details-w");
+				a.classList.remove("details-g");
+				a.classList.add("details-db");
+
+				firebase.database().ref(`adm/pedidos/${key}`).update({
+					status: "Preparando",
+				});
+
+				document.getElementById(`status${id}`).innerHTML =
+					"<strong>Status: </strong> Preparando";
+
+				databaseRef
+					.child(userid)
+					.child("pedidos")
+					.orderByChild("id")
+					.equalTo(id)
+					.once("value", (snapshot) => {
+						snapshot.forEach((childSnapshot) => {
+							firebase
+								.database()
+								.ref(
+									`users/${userid}/pedidos/${childSnapshot.key}`
+								)
+								.update({
+									status: "Preparando",
+								});
+						});
+					});
+				break;
+			case "entregue":
+				let b = document.getElementById(`h2${id}`);
+				b.classList.remove("emphasis");
+				b.classList.remove("details-w");
+				b.classList.remove("details-db");
+				b.classList.add("details-g");
+
+				firebase.database().ref(`adm/pedidos/${key}`).update({
+					status: "Entregue",
+				});
+
+				document.getElementById(`status${id}`).innerHTML =
+					"<strong>Status: </strong> Entregue";
+
+				databaseRef
+					.child(userid)
+					.child("pedidos")
+					.orderByChild("id")
+					.equalTo(id)
+					.once("value", (snapshot) => {
+						snapshot.forEach((childSnapshot) => {
+							firebase
+								.database()
+								.ref(
+									`users/${userid}/pedidos/${childSnapshot.key}`
+								)
+								.update({
+									status: "Entregue",
+								});
+						});
+					});
+
+				if (last === "NE") {
+					pedidosNE();
+				} else if (last === "E") {
+					pedidosE();
+				}
+				break;
+			case "pago":
+				let c = document.getElementById(`h2${id}`);
+				c.classList.remove("emphasis");
+				c.classList.remove("details-g");
+				c.classList.remove("details-db");
+				c.classList.add("details-w");
+
+				firebase.database().ref(`adm/pedidos/${key}`).update({
+					debito: "Pago",
+				});
+
+				document.getElementById(`debito${id}`).innerHTML =
+					"<strong>Pagamento: </strong> Pago";
+
+				databaseRef
+					.child(userid)
+					.child("pedidos")
+					.orderByChild("id")
+					.equalTo(id)
+					.once("value", (snapshot) => {
+						snapshot.forEach((childSnapshot) => {
+							firebase
+								.database()
+								.ref(
+									`users/${userid}/pedidos/${childSnapshot.key}`
+								)
+								.update({
+									debito: "Pago",
+								});
+						});
+					});
+				break;
+			case "reset":
+				let d = document.getElementById(`h2${id}`);
+				d.classList.remove("details-w");
+				d.classList.remove("details-g");
+				d.classList.remove("details-db");
+				d.classList.add("emphasis");
+
+				firebase.database().ref(`adm/pedidos/${key}`).update({
+					status: "Em processo",
+					debito: "Em débito",
+				});
+
+				document.getElementById(`status${id}`).innerHTML =
+					"<strong>Status: </strong> Em processo";
+				document.getElementById(`debito${id}`).innerHTML =
+					"<strong>Pagamento: </strong> Em débito";
+
+				databaseRef
+					.child(userid)
+					.child("pedidos")
+					.orderByChild("id")
+					.equalTo(id)
+					.once("value", (snapshot) => {
+						snapshot.forEach((childSnapshot) => {
+							firebase
+								.database()
+								.ref(
+									`users/${userid}/pedidos/${childSnapshot.key}`
+								)
+								.update({
+									status: "Em processo",
+									debito: "Em débito"
+								});
+						});
+					});
+
+				if (last === "NE") {
+					pedidosNE();
+				} else if (last === "E") {
+					pedidosE();
+				}
+				break;
+		}
+	}
+</script>

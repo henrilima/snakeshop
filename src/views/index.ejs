@@ -1,0 +1,130 @@
+<%- include('./partials/header') %>
+
+<section class="warns">
+    <div>
+        <div class="logo">
+            <img src="https://i.imgur.com/CHaONtr.png" draggable="false" />
+        </div>
+        <div class="glassBox gb01">
+            <img
+                src="/assets/warning.png"
+                draggable="false"
+                width="32px"
+                height="32px"
+            />
+            <div>
+                <h3><span class="details-b">Dúvida com os</span> tamanhos?</h3>
+                <p>Desça até a seção da comunidade e veja o guia de tamanhos.</p>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="glassBox gb02">
+                <h3><span class="details-w">Novo:</span> Polaroids</h3>
+                <img src="https://i.imgur.com/O34SIsf.png" alt="polaroids" draggable="false">
+                <a href="#catalogo" class="box-button">Ver mais</a>
+        </div>
+        <div class="glassBox gb03">
+                <h3>Marca-Páginas</h3>
+                <img src="https://i.imgur.com/q8OROlZ.png" alt="marca-páginas" draggable="false">
+                <a href="#catalogo" class="box-button">Ver mais</a>
+        </div>
+    </div>
+</section>
+
+    <%- include('./partials/navbar') %> 
+    <main>
+        <section class="ms ms01" id="ms01">
+            <div>
+                <h2>Personalize seu <span class="emphasis">tamanho</span>.</h2>
+                <h1>Escolha seu <span class="emphasis">estilo prefrido</span>.</h1>
+                <h2>
+                    Crie e compartilhe <span class="emphasis">modelos únicos</span>.
+                </h2>
+            </div>
+            <div class="continue-button">
+                <img
+                    src="/assets/arrowcircledown.png"
+                    draggable="false"
+                    width="32px"
+                    height="32px"
+                />
+                <a href="#catalogo"> Continuar </a>
+            </div>
+        </section>
+        <section class="ms ms02" id="catalogo">
+            <h2>Catálogo</h2>
+            <div class="catalogue">
+                <% for (const item of Object.keys(items)) { %> <% if
+                (!items.hasOwnProperty(item)) { continue; } %>
+                <div class="product-box">
+                    <div class="product-image">
+                        <img
+                            src="<%- items[item].src %>"
+                            alt="<%- items[item].nome %>"
+                        />
+                    </div>
+                    <div class="product-details">
+                        <h3><%- items[item].nome %></h3>
+                        <p class="description"><%- items[item].descricao %></p>
+                        <div class="product-rate">
+                            <span class="star"></span>
+                            <span class="star"></span>
+                            <span class="star"></span>
+                            <span class="star"></span>
+                            <span class="star"></span>
+                        </div>
+                        <p class="price"><%- items[item].preco %></p>
+                        <% if (!user) { %>
+                        <button
+                            class="add-to-cart buttonaddtocart"
+                            onclick="Swal.fire({
+                                text: 'Faça login para adicionar itens ao carrinho!',
+                                showConfirmButton: false,
+                                confirmButtonText: 'OK'
+                            }); setTimeout(() => window.location.href = '/google/', 2000)"
+                        >
+                            <i class="fas fa-shopping-cart"></i> Adicionar ao
+                            Carrinho
+                        </button>
+                        <% } else { %>
+                        <button
+                            class="add-to-cart buttonaddtocart"
+                            onclick="addToCart('<%- items[item].id %>', '<%- user.username %><%- user.discriminator %>'); Swal.fire({
+                                title: 'Sucesso!',
+                                text: 'Um item foi atualizado em seu carrinho: <%- items[item].nome %>!',
+                                confirmButtonText: 'OK'
+                              });"
+                        >
+                            <i class="fas fa-shopping-cart"></i> Adicionar ao
+                            Carrinho
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </section>
+    
+        <section class="ms ms03">
+            <h2>Comunidade</h2>
+            <div>
+                <p><strong>Tamanho Polaroid - P:</strong> 6cm X 6,5cm</p>
+                <p><strong>Tamanho Polaroid - G:</strong> 8cm X 9cm</p>
+                <p><strong>Tamanho Spotify Code:</strong> 6cm X 6,5cm</p>
+                <p><strong>Tamanho Design: Paint XP:</strong> 8,5cm X 7,5cm</p>
+                <p><strong>Tamanho Marca-páginas:</strong> 5cm X 18cm</p>
+            </div>
+        </section>
+    </main>     
+
+    <footer>
+        <div></div>
+        <div>
+            <h2 class="atlas">Atlas</h2>
+            <a class="atlasmin">todos os direitos reservados &#169;</a>
+        </div>
+        <div class="plus">3º Ano "C"</div>
+    </footer>
+    </body>
+</html>

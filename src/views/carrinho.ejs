@@ -1,0 +1,364 @@
+<%- include('./partials/header') %>
+<%- include('./partials/navbar') %>
+
+<main class="carrinho">
+	<section>
+		<div>
+			<h2>Total: <span class="emphasis" id="price-element">R$ 0,00</span></h2>
+		</div>
+		<ul id="list-shop"></ul>
+		<form>
+			<div>
+				<input id="input-entrega" type="text" placeholder="Nome Completo (Para a entrega)" minlength="8" required>
+				<select id="select-entrega" required>
+					<option value="" selected disabled>Selecione a turma</option>
+					<option value="1a">1º ano "A"</option>
+					<option value="1b">1º ano "B"</option>
+					<option value="1c">1º ano "C"</option>
+					<option value="1d">1º ano "D"</option>
+					<option value="2a">2º ano "A"</option>
+					<option value="2b">2º ano "B"</option>
+					<option value="2c">2º ano "C"</option>
+					<option value="2d">2º ano "D"</option>
+					<option value="3a">3º ano "A"</option>
+					<option value="3b">3º ano "B"</option>
+					<option value="3c">3º ano "C"</option>
+					<option value="3d">3º ano "D"</option>
+					<option value="prof">Professor</option>
+					<option value="nestudante">Não estudante/funcionário</option>
+				</select>
+				<input id="number-entrega" type="text" oninput="formatarTelefone(this)" placeholder="Seu número de telefone" required>
+			</div>
+			<a href="#" class="button-buy" onclick="finalizar()">
+				finalizar compra
+			</a>
+		</form>
+	</section>
+</main>
+
+<footer>
+	<div></div>
+	<div>
+		<h2 class="atlas">Atlas</h2>
+		<a class="atlasmin">todos os direitos reservados &#169;</a>
+	</div>
+	<div class="plus">3º Ano "C"</div>
+</footer>
+
+<script>
+    firebase
+        .database()
+        .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+        .on("child_added", function (snapshot) {
+            let text = snapshot.key;
+            document.getElementById("list-shop").innerHTML += `<li id="item${
+                snapshot.key
+            }"><div>${text.replace(
+                new RegExp(snapshot.key, "gi"),
+                palavrasParaSubstituir[snapshot.key]
+            )} <button id="button" data-id="${
+                snapshot.key
+            }" onclick="removerItem(this)" style="cursor: pointer; background: none; margin-left: 0.5rem; border: none;">🗑️</button></div><div id="${
+                snapshot.key
+            }value">${snapshot.val()}</div></li><hr id="hr${snapshot.key}">`;
+        });
+
+    function removerItem(self) {
+        var element = self.getAttribute("data-id");
+        console.log(element);
+        firebase
+            .database()
+            .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+            .once("value")
+            .then(async (snapshot) => {
+                if (snapshot.exists()) {
+                    let oldValue = snapshot.val()[element]
+                        ? snapshot.val()[element]
+                        : 0;
+                    let data = {
+                        [element]: oldValue + -1,
+                    };
+                    firebase
+                        .database()
+                        .ref(
+                            "carrinho/<%- user.username %><%- user.discriminator %>"
+                        )
+                        .update(data);
+                } else {
+                    let data = {
+                        [element]: -1,
+                    };
+                    firebase
+                        .database()
+                        .ref(
+                            "carrinho/<%- user.username %><%- user.discriminator %>"
+                        )
+                        .update(data);
+                }
+            });
+    }
+
+    firebase
+        .database()
+        .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+        .on("child_changed", (snapshot) => {
+            calcularTotal();
+            document.getElementById(`${snapshot.key}value`).innerHTML =
+                snapshot.val();
+
+            if (snapshot.val() == 0) {
+                document.getElementById(`item${snapshot.key}`).remove();
+                document.getElementById(`hr${snapshot.key}`).remove();
+                firebase
+                    .database()
+                    .ref(
+                        "carrinho/<%- user.username %><%- user.discriminator %>"
+                    )
+                    .child(snapshot.key)
+                    .set({});
+            }
+        });
+
+    firebase
+        .database()
+        .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+        .on("child_removed", function (snapshot) {
+            calcularTotal();
+            document.getElementById(`${snapshot.key}value`).innerHTML =
+                snapshot.val();
+
+            if (snapshot.val() == 0) {
+                document.getElementById(`item${snapshot.key}`).remove();
+                document.getElementById(`hr${snapshot.key}`).remove();
+                firebase
+                    .database()
+                    .ref(
+                        "carrinho/<%- user.username %><%- user.discriminator %>"
+                    )
+                    .child(snapshot.key)
+                    .set({});
+            }
+        });
+
+    function calcularTotalItensCarrinho(refItems, refCarrinho) {
+        const promises = [];
+        return refItems.once("value").then((itemsSnapshot) => {
+            itemsSnapshot.forEach((itemSnapshot) => {
+                const preco = itemSnapshot.child("price").val();
+                const itemId = itemSnapshot.key;
+                const itemProp = itemId.replace(
+                    new RegExp(itemSnapshot.key, "gi"),
+                    idsParaSubstituir[itemSnapshot.key]
+                );
+                const itemRefCarrinho = refCarrinho.child(itemProp);
+                const promise = itemRefCarrinho
+                    .once("value")
+                    .then((carrinhoSnapshot) => {
+                        const subtotal = preco * carrinhoSnapshot.val();
+                        return {
+                            subtotal,
+                            key: itemId,
+                        };
+                    });
+                promises.push(promise);
+            });
+            return Promise.allSettled(promises).then((results) => {
+                let total = 0;
+                results.forEach((result) => {
+                    if (result.status === "fulfilled") {
+                        total += result.value.subtotal;
+                    }
+                });
+                return total;
+            });
+        });
+    }
+
+    function calcularTotal() {
+        const refItems = firebase.database().ref("items");
+        const refCarrinho = firebase
+            .database()
+            .ref("carrinho/<%- user.username %><%- user.discriminator %>");
+        calcularTotalItensCarrinho(refItems, refCarrinho).then((total) => {
+            document.getElementById("price-element").innerHTML =
+                formatarReal(total);
+        });
+    }
+
+    calcularTotal();
+
+    function finalizar() {
+        const data = verificarInputs();
+        const code = generateCode();
+
+        if (data === true) {
+            Swal.fire({
+                icon: "success",
+                title: `Pedido: #${code}`,
+                text: "Seu pedido foi realizado com sucesso! Agora acesse seu perfil e clique em 'personalizar' para personalizar seus itens.",
+                confirmButtonText: "OK",
+            });
+
+            let lista = "";
+
+            firebase
+                .database()
+                .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+                .once("value", (snapshot) => {
+                    snapshot.forEach((childSnapshot) => {
+                        const valor = childSnapshot.val();
+                        const chave = childSnapshot.key;
+                        lista += `<li>${chave.replace(
+                            new RegExp(chave, "gi"),
+                            palavrasParaSubstituir[chave]
+                        )}: ${valor}</li>`;
+                    });
+
+                    firebase
+                        .database()
+                        .ref(
+                            "users/<%- user.username %><%- user.discriminator %>/pedidos"
+                        )
+                        .push({
+                            usuario: "<%- user.username %><%- user.discriminator %>",
+                            id: code,
+                            status: "Em processo",
+                            cliente:
+                                document.getElementById("input-entrega").value,
+                            telefone: document.getElementById("number-entrega").value,
+                            turma: document
+                                .getElementById("select-entrega")
+                                .value.replace(
+                                    new RegExp(
+                                        document.getElementById(
+                                            "select-entrega"
+                                        ).value,
+                                        "gi"
+                                    ),
+                                    turmasParaSubstituir[
+                                        document.getElementById(
+                                            "select-entrega"
+                                        ).value
+                                    ]
+                                ),
+                            preco: document.getElementById("price-element")
+                                .innerHTML,
+                            debito: "Em débito",
+                            lista: lista,
+                        });
+
+                    firebase
+                        .database()
+                        .ref("adm/pedidos")
+                        .push({
+                            usuario: "<%- user.username %><%- user.discriminator %>",
+                            id: code,
+                            status: "Em processo",
+                            cliente:
+                                document.getElementById("input-entrega").value,
+                            telefone: document.getElementById("number-entrega").value,
+                            turma: document
+                                .getElementById("select-entrega")
+                                .value.replace(
+                                    new RegExp(
+                                        document.getElementById(
+                                            "select-entrega"
+                                        ).value,
+                                        "gi"
+                                    ),
+                                    turmasParaSubstituir[
+                                        document.getElementById(
+                                            "select-entrega"
+                                        ).value
+                                    ]
+                                ),
+                            preco: document.getElementById("price-element")
+                                .innerHTML,
+                            debito: "Em débito",
+                            lista: lista,
+                        });
+                });
+
+            firebase
+                .database()
+                .ref("carrinho/<%- user.username %><%- user.discriminator %>")
+                .set({});
+            document.getElementById("list-shop").innerHTML = "";
+        }
+    }
+
+
+	// FUNÇÕES COMPLETAS
+    function verificarTelefoneCompleto(valor) {
+        formatarTelefone(valor);
+        let numero = valor.value;
+        numero = numero.replace(/\D/g, "");
+        let completo = numero.length === 10 || numero.length === 11;
+
+        return completo;
+    }
+
+    function verificarInputs() {
+        const lista = document.getElementById("list-shop");
+        const selectEntrega = document.getElementById("select-entrega");
+        const inputEntrega = document.getElementById("input-entrega");
+        const numberEntrega = document.getElementById("number-entrega");
+        const turmas = [
+            "1a",
+            "1b",
+            "1c",
+            "1d",
+            "2a",
+            "2b",
+            "2c",
+            "2d",
+            "3a",
+            "3b",
+            "3c",
+            "3d",
+            "prof",
+            "nestudante",
+        ];
+
+        if (lista.innerHTML.replace(/\s/g, "") === "") {
+            return Swal.fire({
+                icon: "info",
+                text: "Não há nada no seu carrinho",
+                confirmButtonText: "OK",
+            });
+        } else if (inputEntrega.value.length < 8) {
+            console.log(lista.innerHTML);
+            return Swal.fire({
+                icon: "error",
+                text: "O nome precisa de no mínimo 8 caracteres",
+                confirmButtonText: "OK",
+            });
+        } else if (!turmas.includes(selectEntrega.value)) {
+            return Swal.fire({
+                icon: "error",
+                text: "Selecione uma turma",
+                confirmButtonText: "OK",
+            });
+        } else if (!verificarTelefoneCompleto(numberEntrega)) {
+            return Swal.fire({
+                icon: "error",
+                text: "O seu número de telefone não está certo",
+                confirmButtonText: "OK",
+            });
+        }
+
+        return true;
+    }
+
+    function generateCode() {
+        var chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+        var code = "";
+        for (var i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+</script>
+
+</body>
+</html>
