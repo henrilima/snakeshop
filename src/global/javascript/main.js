@@ -25,6 +25,8 @@ const idsParaSubstituir = {
     6: "spotifyplayer",
     7: "marcapaginas",
     8: "caneca",
+    9: "padrao",
+    10: "padraobranco",
 };
 
 const palavrasParaSubstituir = {
@@ -37,6 +39,8 @@ const palavrasParaSubstituir = {
     spotifyplayer: "Design: Spotify Player",
     marcapaginas: "Marca-páginas c/ borla",
     caneca: "Caneca",
+    padrao: "Padrão - Preto",
+    padraobranco: "Padrão - Branco",
 };
 
 class Shorten {
@@ -158,6 +162,10 @@ async function addToCart(id, ref) {
         item = "marcapaginas";
     } else if (Number(id) === 8) {
         item = "caneca";
+    } else if (Number(id) === 9) {
+        item = "padrao";
+    } else if (Number(id) === 10) {
+        item = "padraobranco";
     } else {
         item = "nada";
     }
